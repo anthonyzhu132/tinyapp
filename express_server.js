@@ -9,8 +9,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+app.get("/urls/new", (request, response) => {
+  response.render("urls_new");
+});
+
 app.get("/", (request, response) => {
-  response.send("Displaying test for root directory 😘 Testing!!!"); // Code is sending a response to once we load the website
+  response.send("Displaying the homepage / <--"); // Code is sending a response to once we load the website
 });
 
 app.get("/urls.json", (request, response) => {
