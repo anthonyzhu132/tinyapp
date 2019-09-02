@@ -26,6 +26,11 @@ app.get("/urls", (request, response) => {
   response.render("urls_index", templateVars);
 });
 
+app.get("/urls/:shortURL", (request, response) => {
+  let templateVars = { shortURL: request.params.shortURL, longURL: request.params.longURL};
+  response.render("urls_show", templateVars);
+});
+
 app.listen(port, () => {
   console.log("Example app listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
 });
