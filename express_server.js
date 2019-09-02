@@ -21,6 +21,11 @@ app.get("/hello", (request, response) => {
   response.send("<html><h1><body>Hello <b>World</b></body></h1></html>\n");
 });
 
+app.get("/urls", (request, response) => {
+  let templateVars = { urls: urlDatabase };
+  response.render("urls_index", templateVars);
+});
+
 app.listen(port, () => {
   console.log("Example app listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
 });
