@@ -11,6 +11,10 @@ app.get("/", (request, response) => {
   response.send("Displaying test for root directory 😘 Testing!!!"); // Code is sending a response to once we load the website
 });
 
+app.get("/urls.json", (request, response) => {
+  response.json(urlDatabase);
+});
+
 app.listen(port, () => {
   console.log("Example app listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
 });
