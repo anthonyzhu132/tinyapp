@@ -32,6 +32,6 @@ app.get("/urls/:shortURL", (request, response) => {
 });
 
 app.listen(port, () => {
-  console.log("Example app listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
+  console.log("Server online! Listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
 });
 
