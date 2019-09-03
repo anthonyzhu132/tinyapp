@@ -21,6 +21,7 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
 app.get("/", (request, response) => {
   response.send("Displaying the homepage / <--"); // Code is sending a response to once we load the website
 });
@@ -36,10 +37,6 @@ app.get("/urls", (request, response) => {
 
 app.get("/urls/new", (request, response) => {
   response.render("urls_new");
-});
-
-app.get("/urls.json", (request, response) => {
-  response.json(urlDatabase);
 });
 
 app.get("/urls/:shortURL", (request, response) => {
