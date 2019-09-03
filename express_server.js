@@ -6,8 +6,15 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-function generateRandomString() {
-  
+const randomString = function () {
+  // eslint-disable-next-line no-empty
+  let result = "";
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let charactersLength = chars.length;
+  for (let i = 1; i < 7; i++) {
+    result += chars.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
 };
 
 const urlDatabase = {
@@ -38,6 +45,8 @@ app.get("/urls/:shortURL", (request, response) => {
 });
 
 app.post("/urls", (request, response) => {
+  const shortURL = randomString();
+  urlDatabase[shortURL] = request.body.longURL;
   console.log(request.body); // Log the POST request body to the console
   response.send("Ok!"); // Respond with 'Ok' (we will replace this)
 });
