@@ -21,17 +21,12 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
-
-app.get("/urls/new", (request, response) => {
-  response.render("urls_new");
-});
-
 app.get("/", (request, response) => {
   response.send("Displaying the homepage / <--"); // Code is sending a response to once we load the website
 });
 
-app.get("/urls.json", (request, response) => {
-  response.json(urlDatabase);
+app.listen(port, () => {
+  console.log("Server online! Listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
 });
 
 app.get("/urls", (request, response) => {
@@ -39,8 +34,17 @@ app.get("/urls", (request, response) => {
   response.render("urls_index", templateVars);
 });
 
+app.get("/urls/new", (request, response) => {
+  response.render("urls_new");
+});
+
+app.get("/urls.json", (request, response) => {
+  response.json(urlDatabase);
+});
+
 app.get("/urls/:shortURL", (request, response) => {
-  let templateVars = { shortURL: request.params.shortURL, longURL: request.params.longURL};
+  let templateVars = { shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL] };
+  console.log(templateVars);
   response.render("urls_show", templateVars);
 });
 
@@ -48,10 +52,10 @@ app.post("/urls", (request, response) => {
   const shortURL = randomString();
   urlDatabase[shortURL] = request.body.longURL;
   console.log(request.body); // Log the POST request body to the console
-  response.send("Ok!"); // Respond with 'Ok' (we will replace this)
+  response.redirect("/urls/" + shortURL);
 });
 
-app.listen(port, () => {
-  console.log("Server online! Listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
+app.get("/u/:shortURL", (req, res) => {
+  // const longURL = ...
+  res.redirect(longURL);
 });
-
