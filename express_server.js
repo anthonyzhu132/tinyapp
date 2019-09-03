@@ -60,7 +60,16 @@ app.get("/u/:shortURL", (request, response) => {
   response.redirect(longURL);
 });
 
-app.post("/urls/:id", (request, response) => {
+
+app.post('/urls/:shortURL/edit', (request, response) => {
+  console.log(request.body, request.params);
+  const newURL = request.body.newURL;
+  const id = request.params.shortURL;
+  urlDatabase[id] = newURL;
+  response.redirect(`/urls/${id}`);
+});
+
+app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
   delete urlDatabase[id];
   response.redirect("/urls/");
