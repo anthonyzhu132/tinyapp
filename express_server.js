@@ -4,9 +4,10 @@ const app = express();
 const port = 8080; // default port 8080
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
-
-const randomString = function () {
+const randomString = function() {
   // eslint-disable-next-line no-empty
   let result = "";
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -31,16 +32,18 @@ app.listen(port, () => {
 });
 
 app.get("/urls", (request, response) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase, username: request.cookies["username"] };
   response.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (request, response) => {
-  response.render("urls_new");
+  let templateVars = { username: request.cookies["username"] };
+  response.render("urls_new", templateVars);
 });
 
+// Details Page
 app.get("/urls/:shortURL", (request, response) => {
-  let templateVars = { shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL] };
+  let templateVars = { shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL], username: request.cookies["username"] };
   console.log(templateVars);
   response.render("urls_show", templateVars);
 });
@@ -53,21 +56,40 @@ app.post("/urls", (request, response) => {
 });
 
 app.get("/u/:shortURL", (request, response) => {
-  const longURL = urlDatabase[request.params.shortURL];
+  let longURL = urlDatabase[request.params.shortURL];
+  if (longURL.includes("http://")) {
+    response.redirect(longURL);
+  } else {
+    longURL = "http://" + longURL;
+  }
   response.redirect(longURL);
 });
 
-
+//EDITING SHORTENED URLS
 app.post('/urls/:shortURL/edit', (request, response) => {
-  console.log(request.body, request.params);
   const newURL = request.body.newURL;
   const id = request.params.shortURL;
   urlDatabase[id] = newURL;
   response.redirect(`/urls/${id}`);
 });
 
+//DELETING SHORTENED URLS
 app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
   delete urlDatabase[id];
+  response.redirect("/urls/");
+});
+
+//LOGGING INTO LOCALHOST AND ADDING COOKIES
+app.post("/login", (request, response) => {
+  let username = request.body.login;
+  response.cookie('username', username);
+  response.redirect("/urls/");
+});
+
+//LOGGIGN OUT OF LOCALHOST AND DELETING COOKIES
+app.post("/logout", (request, response) => {
+  let username = request.cookies["username"];
+  response.cookie("username", "", {expires: new Date(0)});
   response.redirect("/urls/");
 });
