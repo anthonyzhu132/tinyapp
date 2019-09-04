@@ -8,16 +8,13 @@
         <div class="navbar-nav">
           <a class="nav-item nav-link" href="/urls">My URLs</a>
           <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-          <% if (username === undefined) { %>
-          <form method="POST" action="/login">
-            <label for="login">Username</label>
-            <input id="login" name="login" />
-            <button class="btn btn-dark" type="submit">Submit</button>
-            </form>
+          <% if (!user) { %>
+            <a class="nav-item nav-link" href="/login"<button class="btn btn-primary" type="submit">Login</button></a>
+            <a class="nav-item nav-link" href="/register"<button class="btn btn-primary" type="submit">Register</button></a>
          <% } else { %>
-          <a class="nav-item nav-link" href="/logout"><%= username %></a>
+          <a class="nav-item nav-link" href="/logout"><%= user.email %></a>
           <form method="POST" action="/logout">
-              <button class="btn btn-dark" type="submit">Logout</button>
+            <button class="btn btn-dark" type="submit">Logout</button>
           </form>
         <% } %>
         </div>
