@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+        <title>REGISTER</title>
+      </head>
+</head>
+<body>
+    <% include partials/_header %>
+    <form ALIGN=CENTER method="POST" action="/register">
+      <label for="email">Email</label><br>
+      <input type="email" id="email" name="email" />
+      <br>
+      <label for="password">Password</label><br>
+      <input type="password" id="password" name="password" /><br><br>
+      <button class="btn btn-dark" type="submit">Register Now</button>
+      </form>
+</body>
+</html>
