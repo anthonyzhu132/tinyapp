@@ -21,7 +21,7 @@ const users = {
 };
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "user2RandomID" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 const randomString = function() {
@@ -47,7 +47,7 @@ const urlsForUser = function(id) {
   let links = {};
   for (let i in urlDatabase) {
     if (id === urlDatabase[i].userID) {
-      links[i] = urlDatabase[i].longURL;
+      links[i] = urlDatabase[i].longURL;  
     }
   }
   return links;
@@ -134,15 +134,31 @@ app.get("/u/:shortURL", (request, response) => {
 app.post('/urls/:shortURL/edit', (request, response) => {
   const newURL = request.body.newURL;
   const id = request.params.shortURL;
-  urlDatabase[id] = newURL;
-  response.redirect(`/urls/${id}`);
+  if (urlDatabase[id].userID !== request.cookies["user_id"]) {
+    response.status(403).send('Error: 403: Editing Not Allowed Please <a href="/register"> Go Register  </a>');
+    return;
+  } else {
+    urlDatabase[id].longURL = newURL;
+    response.redirect(`/urls/${id}`);
+  }
 });
+
 
 //DELETING SHORTENED URLS
 app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
-  delete urlDatabase[id];
-  response.redirect("/urls/");
+  const shortURL = request.params.shortURL;
+  if (shortURL !== undefined) { // IF SHORT URL DOES NOT EXIST < --- TEST
+    if (urlDatabase[id].userID !== request.cookies["user_id"]) {
+      response.status(403).send('Error: 403: Not allowed!!!! ❌ Please <a href="/register"> Go Register  </a>');
+      return;
+    } else {
+      console.log(urlDatabase);
+      delete urlDatabase[id];
+      console.log(urlDatabase);
+      response.redirect("/urls/");
+    }
+  }
 });
 
 // login page
@@ -166,7 +182,6 @@ app.post("/login", (request, response) => {
 
 //LOGGIGN OUT OF LOCALHOST AND DELETING COOKIES
 app.post("/logout", (request, response) => {
-  let username = request.cookies["username"];
   response.cookie("user_id", "", {expires: new Date(0)});
   response.redirect("/urls/");
 });
