@@ -1,12 +1,18 @@
+/* eslint-disable camelcase */
 const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 const bcrypt = require('bcrypt');
 const port = 8080; // default port 8080
+const cookieSession = require('cookie-session');
+const { emailCompare } = require('./helpers');
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ["YourKey"],
+}));
 
 const users = {
   "userRandomID": {
@@ -36,43 +42,46 @@ const randomString = function() {
   return result;
 };
 
-const emailCompare = function(email) {
-  for (let id in users) {
-    if (email === users[id].email)
-      return users[id];
-  }
-  return false;
-};
+// const emailCompare = function(email) {
+//   for (let id in users) {
+//     if (email === users[id].email)
+//       return users[id];
+//   }
+//   return false;
+// };
 
 const urlsForUser = function(id) {
   let links = {};
   for (let i in urlDatabase) {
     if (id === urlDatabase[i].userID) {
-      links[i] = urlDatabase[i].longURL;  
+      links[i] = urlDatabase[i].longURL;
     }
   }
   return links;
 };
 
+// / page
 app.get("/", (request, response) => {
-  response.send("Displaying the homepage / <--"); // Code is sending a response to once we load the website
+  if (request.session.userID) {
+    response.redirect('/urls');
+  } else {
+    response.redirect('/login');
+  }
 });
 
 app.listen(port, () => {
-  console.log("Server online! Listening on " + port); // Code is making the express server listen on port 8080 for client to connect.
+  console.log("Server online! Listening on " + port);
 });
 
 app.get("/urls", (request, response) => {
   let templateVars =
-  { urls: urlsForUser(request.cookies["user_id"]),
+  { urls: urlsForUser(request.session.user_id),
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL],
-    userId: request.cookies["user_id"],
+    userId: request.session.user_id,
     users: users,
-    user: users[request.cookies["user_id"]]
+    user: users[request.session.user_id]
   };
-
-  console.log(urlsForUser(request.cookies["user_id"]));
   response.render("urls_index", templateVars);
 });
 
@@ -82,12 +91,12 @@ app.get("/urls/new", (request, response) => {
     urls: urlDatabase,
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL],
-    userId: request.cookies["user_id"],
+    userId: request.session.user_id,
     users: users,
-    user: users[request.cookies["user_id"]]
+    user: users[request.session.user_id]
   };
 
-  if (request.cookies["user_id"]) {
+  if (request.session.user_id) {
     response.render("urls_new", templateVars);
   } else {
     response.status(403).send('You do not have correct access');
@@ -99,9 +108,9 @@ app.get("/urls/:shortURL", (request, response) => {
   let templateVars = { urls: urlDatabase,
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL]["longURL"],
-    userId: request.cookies["user_id"],
+    userId: request.session.user_id,
     users: users,
-    user: users[request.cookies["user_id"]]
+    user: users[request.session.user_id]
   };
 
   if (urlDatabase[request.params.shortURL]) {
@@ -114,7 +123,7 @@ app.get("/urls/:shortURL", (request, response) => {
 //ADD NEW A SHORTURL
 app.post("/urls", (request, response) => {
   const shortURL = randomString();
-  const userID = request.cookies["user_id"];
+  const userID = request.session.user_id;
   urlDatabase[shortURL] = { longURL: request.body.longURL, userID};
   response.redirect("/urls/" + shortURL);
 });
@@ -135,7 +144,7 @@ app.get("/u/:shortURL", (request, response) => {
 app.post('/urls/:shortURL/edit', (request, response) => {
   const newURL = request.body.newURL;
   const id = request.params.shortURL;
-  if (urlDatabase[id].userID !== request.cookies["user_id"]) {
+  if (urlDatabase[id].userID !== request.session.user_id) {
     response.status(403).send('Error: 403: Editing Not Allowed Please <a href="/register"> Go Register  </a>');
     return;
   } else {
@@ -150,13 +159,11 @@ app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
   const shortURL = request.params.shortURL;
   if (shortURL !== undefined) { // IF SHORT URL DOES NOT EXIST < --- TEST
-    if (urlDatabase[id].userID !== request.cookies["user_id"]) {
+    if (urlDatabase[id].userID !== request.session.user_id) {
       response.status(403).send('Error: 403: Not allowed!!!! ❌ Please <a href="/register"> Go Register  </a>');
       return;
     } else {
-      console.log(urlDatabase);
       delete urlDatabase[id];
-      console.log(urlDatabase);
       response.redirect("/urls/");
     }
   }
@@ -170,21 +177,22 @@ app.get('/login', (request, response) => {
 
 //LOGGING INTO LOCALHOST AND ADDING COOKIES
 app.post("/login", (request, response) => {
-  let user = emailCompare(request.body.email);
+  let user = emailCompare(request.body.email, users);
   if (!user) {
     response.status(400).end();
+    response.send("Try Again!");
   } else if (!bcrypt.compareSync(request.body.password, users[user.id].password)) {
-    console.log("good job");
     response.status(400).end();
+    response.send("Try Again!");
   } else {
-    response.cookie('user_id', user.id);
+    request.session.user_id = user.id;
     response.redirect("/urls/");
   }
 });
 
 //LOGGIGN OUT OF LOCALHOST AND DELETING COOKIES
 app.post("/logout", (request, response) => {
-  response.cookie("user_id", "", {expires: new Date(0)});
+  request.session = null;
   response.redirect("/urls/");
 });
 
@@ -194,9 +202,9 @@ app.get("/register", (request, response) => {
     urls: urlDatabase,
     shortURL: request.params.shortURL,
     longURL: urlDatabase[request.params.shortURL],
-    userId: request.cookies["user_id"],
+    // userId: request.session.user_id,
     users: users,
-    user: users[request.cookies["user_id"]]
+    user: users[request.session.user_id]
   };
 
   response.render("urls_register", templateVars);
@@ -211,11 +219,11 @@ app.post("/register", (request, response) => {
   if (request.body.email === '' || request.body.password === '') {
     response.status(400).send('Email or password empty');
     return;
-  } else if (emailCompare(newEmail)) {
+  } else if (emailCompare(newEmail, users)) {
     response.status(400).send('Email already in database');
     return;
   } else {
-    response.cookie('user_id', newUserId);
+    request.session.user_id = newUserId;
     users[newUserId] = {
       id:newUserId,
       email:newEmail,
