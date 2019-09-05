@@ -1,6 +1,7 @@
 const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
+const bcrypt = require('bcrypt');
 const port = 8080; // default port 8080
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -172,7 +173,8 @@ app.post("/login", (request, response) => {
   let user = emailCompare(request.body.email);
   if (!user) {
     response.status(400).end();
-  } else if (user.password !== request.body.password) {
+  } else if (!bcrypt.compareSync(request.body.password, users[user.id].password)) {
+    console.log("good job");
     response.status(400).end();
   } else {
     response.cookie('user_id', user.id);
@@ -205,6 +207,7 @@ app.post("/register", (request, response) => {
   let newEmail = request.body.email;
   let newUserId = randomString();
   let newPassword = request.body.password;
+  const hashedPassword = bcrypt.hashSync(newPassword, 10);
   if (request.body.email === '' || request.body.password === '') {
     response.status(400).send('Email or password empty');
     return;
@@ -216,7 +219,7 @@ app.post("/register", (request, response) => {
     users[newUserId] = {
       id:newUserId,
       email:newEmail,
-      password: newPassword
+      password:hashedPassword
     };
     response.redirect('/urls');
     return;
