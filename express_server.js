@@ -7,6 +7,23 @@ app.set("view engine", "ejs");
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "dank@m.com",
+    password: "123"
+  }
+};
+
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+};
 const randomString = function() {
   // eslint-disable-next-line no-empty
   let result = "";
@@ -26,24 +43,15 @@ const emailCompare = function(email) {
   return false;
 };
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-
-const users = {
-  "userRandomID": {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
-  },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "dank@m.com",
-    password: "123"
+const urlsForUser = function(id) {
+  let links = {};
+  for (let i in urlDatabase) {
+    if (id === urlDatabase[i].userID) {
+      links[i] = urlDatabase[i].longURL;
+    }
   }
+  return links;
 };
-
 
 app.get("/", (request, response) => {
   response.send("Displaying the homepage / <--"); // Code is sending a response to once we load the website
@@ -54,18 +62,47 @@ app.listen(port, () => {
 });
 
 app.get("/urls", (request, response) => {
-  let templateVars = { urls: urlDatabase, shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL], userId: request.cookies["user_id"], users: users, user: users[request.cookies["user_id"]] };
+  let templateVars =
+  { urls: urlsForUser(request.cookies["user_id"]),
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL],
+    userId: request.cookies["user_id"],
+    users: users,
+    user: users[request.cookies["user_id"]]
+  };
+
+  console.log(urlsForUser(request.cookies["user_id"]));
   response.render("urls_index", templateVars);
 });
 
+//CREATING NEW URL PAGE
 app.get("/urls/new", (request, response) => {
-  let templateVars = { urls: urlDatabase, shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL], userId: request.cookies["user_id"], users: users, user: users[request.cookies["user_id"]] };
-  response.render("urls_new", templateVars);
+  let templateVars = {
+    urls: urlDatabase,
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL],
+    userId: request.cookies["user_id"],
+    users: users,
+    user: users[request.cookies["user_id"]]
+  };
+
+  if (request.cookies["user_id"]) {
+    response.render("urls_new", templateVars);
+  } else {
+    response.status(403).send('You do not have correct access');
+  }
 });
 
 // Details Page
 app.get("/urls/:shortURL", (request, response) => {
-  let templateVars = { urls: urlDatabase, shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL], userId: request.cookies["user_id"], users: users, user: users[request.cookies["user_id"]] };
+  let templateVars = { urls: urlDatabase,
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL]["longURL"],
+    userId: request.cookies["user_id"],
+    users: users,
+    user: users[request.cookies["user_id"]]
+  };
+
   if (urlDatabase[request.params.shortURL]) {
     response.render("urls_show", templateVars);
   } else {
@@ -73,15 +110,18 @@ app.get("/urls/:shortURL", (request, response) => {
   }
 });
 
+//ADD NEW A SHORTURL
 app.post("/urls", (request, response) => {
   const shortURL = randomString();
-  urlDatabase[shortURL] = request.body.longURL;
-  console.log(request.body); // Log the POST request body to the console
+  const userID = request.cookies["user_id"];
+  urlDatabase[shortURL] = { longURL: request.body.longURL, userID};
   response.redirect("/urls/" + shortURL);
 });
 
+
+//LONG URL
 app.get("/u/:shortURL", (request, response) => {
-  let longURL = urlDatabase[request.params.shortURL];
+  let longURL = urlDatabase[request.params.shortURL]["longURL"];
   if (longURL.includes("http://")) {
     response.redirect(longURL);
   } else {
@@ -133,7 +173,15 @@ app.post("/logout", (request, response) => {
 
 //CREATED REGISTER LANDING PAGE
 app.get("/register", (request, response) => {
-  let templateVars = { urls: urlDatabase, shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL], userId: request.cookies["user_id"], users: users, user: users[request.cookies["user_id"]] };
+  let templateVars = {
+    urls: urlDatabase,
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL],
+    userId: request.cookies["user_id"],
+    users: users,
+    user: users[request.cookies["user_id"]]
+  };
+
   response.render("urls_register", templateVars);
 });
 
