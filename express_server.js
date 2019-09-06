@@ -1,12 +1,10 @@
-/* eslint-disable camelcase */
 const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 const bcrypt = require('bcrypt');
-const port = 8080; // default port 8080
+const port = 8080;
 const cookieSession = require('cookie-session');
 const { emailCompare } = require('./helpers');
-
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(cookieSession({
@@ -14,6 +12,12 @@ app.use(cookieSession({
   keys: ["YourKey"],
 }));
 
+// port to listen to
+app.listen(port, () => {
+  console.log("Server online! Listening on " + port);
+});
+
+//database of users
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -27,12 +31,14 @@ const users = {
   }
 };
 
+// database of urls
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "user2RandomID" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
+// function to create random string
 const randomString = function() {
-  // eslint-disable-next-line no-empty
   let result = "";
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let charactersLength = chars.length;
@@ -42,14 +48,7 @@ const randomString = function() {
   return result;
 };
 
-// const emailCompare = function(email) {
-//   for (let id in users) {
-//     if (email === users[id].email)
-//       return users[id];
-//   }
-//   return false;
-// };
-
+// function to loop through urls pretaining to user
 const urlsForUser = function(id) {
   let links = {};
   for (let i in urlDatabase) {
@@ -60,7 +59,7 @@ const urlsForUser = function(id) {
   return links;
 };
 
-// / page
+// root page
 app.get("/", (request, response) => {
   if (request.session.userID) {
     response.redirect('/urls');
@@ -69,10 +68,7 @@ app.get("/", (request, response) => {
   }
 });
 
-app.listen(port, () => {
-  console.log("Server online! Listening on " + port);
-});
-
+// renders index page
 app.get("/urls", (request, response) => {
   let templateVars =
   { urls: urlsForUser(request.session.user_id),
@@ -85,7 +81,7 @@ app.get("/urls", (request, response) => {
   response.render("urls_index", templateVars);
 });
 
-//CREATING NEW URL PAGE
+// renders page to create shortened url
 app.get("/urls/new", (request, response) => {
   let templateVars = {
     urls: urlDatabase,
@@ -95,7 +91,6 @@ app.get("/urls/new", (request, response) => {
     users: users,
     user: users[request.session.user_id]
   };
-
   if (request.session.user_id) {
     response.render("urls_new", templateVars);
   } else {
@@ -103,7 +98,7 @@ app.get("/urls/new", (request, response) => {
   }
 });
 
-// Details Page
+// renders page to show shortened url
 app.get("/urls/:shortURL", (request, response) => {
   let templateVars = { urls: urlDatabase,
     shortURL: request.params.shortURL,
@@ -112,7 +107,6 @@ app.get("/urls/:shortURL", (request, response) => {
     users: users,
     user: users[request.session.user_id]
   };
-
   if (urlDatabase[request.params.shortURL]) {
     response.render("urls_show", templateVars);
   } else {
@@ -120,7 +114,37 @@ app.get("/urls/:shortURL", (request, response) => {
   }
 });
 
-//ADD NEW A SHORTURL
+// renders long Url redirection
+app.get("/u/:shortURL", (request, response) => {
+  let longURL = urlDatabase[request.params.shortURL]["longURL"];
+  if (longURL.includes("https://")) {
+    response.redirect(longURL);
+  } else {
+    longURL = "https://" + longURL;
+  }
+  response.redirect(longURL);
+});
+
+// renders login page
+app.get('/login', (request, response) => {
+  response.render('urls_login');
+});
+
+// created user registration page
+app.get("/register", (request, response) => {
+  let templateVars = {
+    urls: urlDatabase,
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL],
+    // userId: request.session.user_id,
+    users: users,
+    user: users[request.session.user_id]
+  };
+
+  response.render("urls_register", templateVars);
+});
+
+// adding a new url to be shortened
 app.post("/urls", (request, response) => {
   const shortURL = randomString();
   const userID = request.session.user_id;
@@ -128,19 +152,7 @@ app.post("/urls", (request, response) => {
   response.redirect("/urls/" + shortURL);
 });
 
-
-//LONG URL
-app.get("/u/:shortURL", (request, response) => {
-  let longURL = urlDatabase[request.params.shortURL]["longURL"];
-  if (longURL.includes("http://")) {
-    response.redirect(longURL);
-  } else {
-    longURL = "http://" + longURL;
-  }
-  response.redirect(longURL);
-});
-
-//EDITING SHORTENED URLS
+// editing shortened urls
 app.post('/urls/:shortURL/edit', (request, response) => {
   const newURL = request.body.newURL;
   const id = request.params.shortURL;
@@ -153,8 +165,7 @@ app.post('/urls/:shortURL/edit', (request, response) => {
   }
 });
 
-
-//DELETING SHORTENED URLS
+// deleting shortened urls
 app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
   const shortURL = request.params.shortURL;
@@ -169,13 +180,7 @@ app.post("/urls/:id/delete", (request, response) => {
   }
 });
 
-// login page
-app.get('/login', (request, response) => {
-  response.render('urls_login');
-});
-
-
-//LOGGING INTO LOCALHOST AND ADDING COOKIES
+// logging into the site and assigning cookies
 app.post("/login", (request, response) => {
   let user = emailCompare(request.body.email, users);
   if (!user) {
@@ -190,27 +195,13 @@ app.post("/login", (request, response) => {
   }
 });
 
-//LOGGIGN OUT OF LOCALHOST AND DELETING COOKIES
+// logging out and deleting cookies from session
 app.post("/logout", (request, response) => {
   request.session = null;
   response.redirect("/urls/");
 });
 
-//CREATED REGISTER LANDING PAGE
-app.get("/register", (request, response) => {
-  let templateVars = {
-    urls: urlDatabase,
-    shortURL: request.params.shortURL,
-    longURL: urlDatabase[request.params.shortURL],
-    // userId: request.session.user_id,
-    users: users,
-    user: users[request.session.user_id]
-  };
-
-  response.render("urls_register", templateVars);
-});
-
-//REGISTERING A NEW USER TO THE SITE
+// registering for a new user with verification
 app.post("/register", (request, response) => {
   let newEmail = request.body.email;
   let newUserId = randomString();
