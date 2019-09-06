@@ -1,4 +1,5 @@
 <header>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     <nav class="navbar navbar-expand-md navbar-dark bg-success">
       <a class="navbar-brand" href="/urls">TinyApp</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -9,12 +10,12 @@
           <a class="nav-item nav-link" href="/urls">My URLs</a>
           <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
           <% if (!user) { %>
-            <a class="nav-item nav-link" href="/login"<button class="btn btn-primary" type="submit">Login</button></a>
-            <a class="nav-item nav-link" href="/register"<button class="btn btn-primary" type="submit">Register</button></a>
+            <a href="/login"> <button class="header-options btn btn-info"> login </button></a>
+            <a href="/register"> <button class="header-options btn btn-info"> register </button></a>
          <% } else { %>
-          <a class="nav-item nav-link" href="/logout"><%= user.email %></a>
-          <form method="POST" action="/logout">
-            <button class="btn btn-dark" type="submit">Logout</button>
+          <a><%= user.email %></a>
+          <form stlye = "position: absolute; right: 9px" method="POST" action="/logout">
+            <button class="btn btn-danger" type="submit">Logout</button>
           </form>
         <% } %>
         </div>
