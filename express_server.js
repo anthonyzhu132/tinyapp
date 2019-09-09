@@ -168,15 +168,12 @@ app.post('/urls/:shortURL/edit', (request, response) => {
 // deleting shortened urls
 app.post("/urls/:id/delete", (request, response) => {
   const id = request.params.id;
-  const shortURL = request.params.shortURL;
-  if (shortURL !== undefined) { // IF SHORT URL DOES NOT EXIST < --- TEST
-    if (urlDatabase[id].userID !== request.session.user_id) {
-      response.status(403).send('Error: 403: Not allowed!!!! ❌ Please <a href="/register"> Go Register  </a>');
-      return;
-    } else {
-      delete urlDatabase[id];
-      response.redirect("/urls/");
-    }
+  if (urlDatabase[id].userID !== request.session.user_id) {
+    response.status(403).send('Error: 403: Not allowed!!!! ❌ Please <a href="/register"> Go Register  </a>');
+    return;
+  } else {
+    delete urlDatabase[id];
+    response.redirect("/urls/");
   }
 });
 
@@ -184,11 +181,9 @@ app.post("/urls/:id/delete", (request, response) => {
 app.post("/login", (request, response) => {
   let user = emailCompare(request.body.email, users);
   if (!user) {
-    response.status(400).end();
-    response.send("Try Again!");
+    response.status(400).send("Please try again with correct information!");
   } else if (!bcrypt.compareSync(request.body.password, users[user.id].password)) {
-    response.status(400).end();
-    response.send("Try Again!");
+    response.status(400).send("Please try again with correct information!");
   } else {
     request.session.user_id = user.id;
     response.redirect("/urls/");
